@@ -271,7 +271,9 @@ a.li{display:flex}
 .fin{width:100%;height:44px;border-radius:12px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);border:0;padding:0 12px;font:inherit;font-size:16px;color:var(--ink);min-width:0}
 .fin:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 input[type=date].fin{-webkit-appearance:none;appearance:none;text-align:left}
-.acts2{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}
+.acts2{display:grid;grid-template-columns:2fr 1fr;gap:8px}
+.acts2 .btn{white-space:nowrap;padding:0 12px}
+.acts2 .btn:only-child{grid-column:1/-1}
 .favb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .favb[aria-pressed="true"] svg{fill:currentColor}
 .fv{display:inline-flex;color:var(--accent)}
@@ -317,6 +319,19 @@ input[type=date].fin{-webkit-appearance:none;appearance:none;text-align:left}
 .cab .rt{font-size:15px;font-weight:600;display:block;line-height:1.3}
 .cab .rm{font-size:13px;color:var(--muted);font-weight:500;display:block}
 .cempty{margin:0;padding:14px;font-size:14px;color:var(--muted);background:var(--surface);border-radius:18px;box-shadow:0 0 0 1px var(--line)}
+.mcard{display:block;width:100%;text-align:left}
+.mcols{display:grid;grid-template-columns:repeat(3,1fr)}
+.mcols>div{padding:12px 12px 8px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:1px;min-width:0}
+.mcols>div:first-child{border-left:0}
+.mn{font-size:12.5px;color:var(--muted);font-weight:500}
+.mcols b{font-size:20px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.mcols b small{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:0}
+.md{font-size:12.5px;font-weight:700;color:var(--accent)}
+.spk{width:100%;max-width:64px;height:24px;margin-top:4px;overflow:visible}
+.spk path{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.spk circle{fill:var(--accent)}
+.mlink{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--line);padding:0 12px 0 14px;min-height:44px;font-size:13px;color:var(--muted);font-weight:500}
+.mlink .tcl{margin-right:-4px}
 </style>
 </head>
 <body>
@@ -585,11 +600,24 @@ function measures(){
     <div class="fl"><label class="flab" for="m-d">Дата</label><input class="fin" type="date" id="m-d" data-m="d" value="${f.d}" max="${todayStr()}"></div>
     <div class="mrow">${[['w','Вес, кг'],['t','Талия, см'],['h','Бёдра, см']].map(([k,n])=>`<div class="fl"><label class="flab" for="m-${k}">${n}</label><input class="fin" type="text" inputmode="decimal" autocomplete="off" id="m-${k}" data-m="${k}" value="${esc(f[k])}" placeholder="—"></div>`).join('')}</div>
     <p class="sm muted">Можно внести только часть замеров. Если запись на эту дату уже есть, она обновится.</p>
-    <div class="acts2"><button class="btn" data-act="msave">${editing?'Сохранить изменения':'Сохранить замер'}</button>${editing?'<button class="btn soft" data-act="mdel">Удалить</button>':''}</div></div>
+    <div class="acts2"><button class="btn" data-act="msave">${editing?'Сохранить':'Сохранить замер'}</button>${editing?'<button class="btn soft" data-act="mdel">Удалить</button>':''}</div></div>
    <div class="group"><h2>История</h2><div class="list">${hist.map(m=>`<button class="li hr" data-act="medit" data-d="${m.d}"><span class="grow"><b>${dLong(m.d)}</b><span class="muted sm" style="display:block">${[m.w!=null?'Вес '+fmt(m.w)+' кг':'',m.t!=null?'Талия '+fmt(m.t)+' см':'',m.h!=null?'Бёдра '+fmt(m.h)+' см':''].filter(Boolean).join(' · ')}</span></span>${ic('chev','chev')}</button>`).join('')}</div></div>`;
 }
 const tgUser=()=>{try{return Telegram.WebApp.initDataUnsafe.user||null}catch(e){return null}};
 const wordOnly=t=>t.replace(/^\d+\u00a0/,'');
+function mspark(k){
+  const pts=S.meas.filter(m=>m[k]!=null).sort((a,b)=>a.d<b.d?-1:1);
+  if(pts.length<2)return '';
+  const v=pts.map(p=>p[k]),lo=Math.min(...v),hi=Math.max(...v),W=64,H=24;
+  const xy=pts.map((p,i)=>[(i/(pts.length-1))*(W-4)+2,hi===lo?H/2:2+(hi-p[k])/(hi-lo)*(H-4)]);
+  return `<svg class="spk" viewBox="0 0 ${W} ${H}" aria-hidden="true"><path d="${xy.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ')}"/><circle cx="${xy[xy.length-1][0].toFixed(1)}" cy="${xy[xy.length-1][1].toFixed(1)}" r="2.6"/></svg>`;
+}
+function mcol(k){
+  const [name,unit]=MU[k],pts=S.meas.filter(m=>m[k]!=null).sort((a,b)=>a.d<b.d?-1:1);
+  if(!pts.length)return `<div><span class="mn">${name}</span><b>—</b></div>`;
+  const last=pts[pts.length-1],d=Math.round((last[k]-pts[0][k])*10)/10;
+  return `<div><span class="mn">${name}</span><b>${fmt(last[k])}<small> ${unit}</small></b>${pts.length>1?`<span class="md">${d>0?'+':d<0?'−':''}${fmt(Math.abs(d))}</span>`:'<span class="md">&nbsp;</span>'}${mspark(k)}</div>`;
+}
 function me(){
   const u=tgUser(),name=(u&&u.first_name)||'Участница',ini=name.trim().charAt(0).toUpperCase();
   const dn_=[...S.done].map(id=>W.find(w=>w.id===id)).filter(Boolean),mins=dn_.reduce((a,w)=>a+w.min,0);
@@ -602,6 +630,10 @@ function me(){
    <div class="csub"><span>Абонемент до 23 декабря</span><button class="link" data-act="toast" data-m="В прототипе оплата не подключена">Продлить</button></div>
   </div>
   <div class="cstats"><div><b>${dn_.length}</b><span>Тренировок</span></div><div><b>${mins}</b><span>Минут</span></div><div><b>${S.fav.size}</b><span>Избранных</span></div></div>
+  <section class="csecw"><h3 class="csec">Замеры</h3>
+   <button class="cabcard mcard" data-act="tomeas" aria-label="Открыть замеры и график">
+    ${S.meas.length?`<span class="mcols">${['w','t','h'].map(mcol).join('')}</span><span class="mlink">Изменение с ${dShort(S.meas.slice().sort((a,b)=>a.d<b.d?-1:1)[0].d)}<span class="tcl">График${ic('chev')}</span></span>`:`<span class="mlink" style="border:0">Пока нет замеров. Добавьте первый<span class="tcl">Добавить${ic('chev')}</span></span>`}
+   </button></section>
   ${sec('Избранное',fv.length,fv,'Пока пусто. Нажмите звезду внутри тренировки.')}
   ${sec('Выполненные',dn_.length,dn_,'Здесь появятся тренировки, которые вы отметите выполненными.')}
   </div>`;
@@ -679,6 +711,7 @@ document.addEventListener('click',e=>{
   else if(a==='chatseg')S.chat=d.k;
   else if(a==='tseg')S.tseg=d.k;
   else if(a==='cmp')S.cmp=true;
+  else if(a==='tomeas'){S.tseg='meas';S.stack.push({t:'sub',id:'progress'})}
   else if(a==='mm'){S.mm=d.k;S.msel=null}
   else if(a==='pt')S.msel=d.d;
   else if(a==='medit'){const m=S.meas.find(x=>x.d===d.d);S.mform={d:m.d,w:m.w==null?'':fmt(m.w),t:m.t==null?'':fmt(m.t),h:m.h==null?'':fmt(m.h)}}
@@ -699,7 +732,7 @@ document.addEventListener('click',e=>{
   else if(a==='wgo'){S.time=wiz.t||'any';S.power=wiz.p||'any';S.cat='all';S.tags=[];S.seg='wk';S.wiz=false;S.tab='move';S.stack=[];S.focus=null}
   else if(a==='toast'){toast(d.m);return}
   S.keep=['seg','cat','time','power','tag','done','join','focus','morefl','favonly','chatseg','tseg','cmp','sos','sosgo','close','w','mm','pt','medit'].includes(a);
-  render();if(['go','sub','back','open','ex','wgo'].includes(a))$('#main').scrollTop=0;
+  render();if(['go','sub','back','open','ex','wgo','tomeas'].includes(a))$('#main').scrollTop=0;
   if(a==='medit'){const p=$('#mform');if(p)p.scrollIntoView({behavior:'smooth',block:'start'})}
   if(a==='cmp'){const p=$('#cmpPanel');if(p)p.scrollIntoView({behavior:'smooth',block:'start'})}
 });
