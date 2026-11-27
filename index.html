@@ -513,6 +513,15 @@ h1,h2,h3,.tt b,.name,.li b{overflow-wrap:break-word}
 .st-seg u.a{background:rgba(34,44,14,.36)}
 .st-seg u.n{background:var(--volt-ink)}
 .st-demo{gap:16px}
+/* tab bar: the active mark is a small pill behind the icon, never wider than the icon column */
+nav{padding:6px 6px calc(2px + 0px)}
+nav button,nav button[aria-current="page"]{background:none;border-radius:0;padding:11px 0 8px;gap:6px}
+nav button svg{position:relative;z-index:1}
+nav button[aria-current="page"]{color:var(--ink)}
+nav button[aria-current="page"]::before{content:'';position:absolute;top:6px;left:50%;width:min(56px,calc(100% - 4px));height:32px;transform:translateX(-50%);border-radius:16px;background:var(--volt)}
+.stories:focus{outline:none}
+.st-photo{flex:none;aspect-ratio:1}
+.st-x:focus:not(:focus-visible){outline:none}
 </style>
 
 <div class="app" id="app">
@@ -966,7 +975,7 @@ function stRender(){
   [...el.querySelectorAll('.st-slide>*')].forEach((n,i)=>n.style.setProperty('--i',i));
   const b=el.querySelector('.st-bars i.cur b');if(b)b.addEventListener('animationend',()=>stGo(1),{once:true});
 }
-function stOpen(i=0){si=i;$('#stories').hidden=false;$('#stories').classList.remove('paused');stRender();const x=$('#stories .st-x');if(x)x.focus({preventScroll:true})}
+function stOpen(i=0){si=i;$('#stories').hidden=false;$('#stories').classList.remove('paused');stRender();const e=$('#stories');e.tabIndex=-1;e.focus({preventScroll:true})}
 function stClose(){$('#stories').hidden=true;$('#stories').innerHTML=''}
 function stGo(d){const n=si+d;if(n<0){stRender();return}if(n>=ST.length){stClose();return}si=n;stRender()}
 (function(){const el=$('#stories');
