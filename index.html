@@ -525,6 +525,8 @@ nav button[aria-current="page"]::before{content:'';position:absolute;top:6px;lef
 /* tab bar floats: only the capsule is drawn, content scrolls behind it (no full-width band) */
 nav{position:absolute;left:14px;right:14px;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin:0;z-index:10;background:rgba(253,253,247,.9);-webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2);box-shadow:0 0 0 1px rgba(48,60,20,.08),0 10px 30px rgba(48,60,20,.18)}
 main{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
+main{scrollbar-width:none;scrollbar-gutter:auto}
+main::-webkit-scrollbar{display:none;width:0;height:0}
 </style>
 
 <div class="app" id="app">
@@ -658,7 +660,7 @@ function wRow(w,n,expand){
 
 const CATC={bb:'volt',mob:'sage',pil:'blush',pf:'sand',rest:'mist'};
 function wTile(w,i){
-  return `<button class="tile wt ${CATC[w.cat]} ${i%5===0?'w2':''}" data-act="open" data-id="${w.id}">
+  return `<button class="tile wt ${CATC[w.cat]}" data-act="open" data-id="${w.id}">
    <span class="badge2">${S.fav.has(w.id)?`<span class="fv">${ic('star')}</span>`:''}${S.done.has(w.id)?ic('check'):''}</span>
    <span class="tmin">${w.min}<small>мин</small></span>
    <span class="tt"><b>${w.t}</b>${bar(w,i)}<span class="meta">${eff(w.lv)}<span>${LV[w.lv-1]}</span></span></span></button>`}
