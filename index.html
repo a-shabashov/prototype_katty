@@ -560,6 +560,50 @@ textarea{resize:none;min-height:96px;max-height:220px;overflow-y:auto;field-sizi
 .cdots u{width:11px;height:11px;border-radius:50%;background:rgba(34,44,14,.18);text-decoration:none;flex:none}
 .cdots u.d{background:var(--volt-ink)}
 .cdots u.t{background:var(--volt-ink);box-shadow:0 0 0 3px rgba(34,44,14,.22)}
+/* tab bar v3: frosted capsule; the active tab expands into an olive pill with its name, the rest are icons */
+nav{display:flex;grid-template-columns:none;gap:4px;padding:6px;border-radius:999px;background:rgba(253,253,247,.86);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);box-shadow:0 0 0 1px rgba(48,60,20,.07),inset 0 1px 0 rgba(255,255,255,.9),0 14px 36px rgba(48,60,20,.2)}
+nav button,nav button[aria-current="page"]{flex:1 1 0;min-width:0;height:52px;padding:0;border-radius:999px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:0;font-size:14px;font-weight:700;letter-spacing:-.01em;color:#6A7154;background:none;transition:flex-grow .55s cubic-bezier(.16,1,.3,1),background-color .3s,color .3s}
+nav button[aria-current="page"]{flex-grow:2.9;gap:8px;background:#55642A;color:#F6F8E8;box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+nav button[aria-current="page"]::before,nav button[aria-current="page"]::after{display:none}
+nav button svg{width:24px;height:24px;stroke-width:1.9;position:relative}
+nav button[aria-current="page"] svg{stroke:#D4E48C;stroke-width:2.1}
+nav .nl{max-width:0;opacity:0;overflow:hidden;white-space:nowrap;transition:max-width .55s cubic-bezier(.16,1,.3,1),opacity .3s .05s}
+nav button[aria-current="page"] .nl{max-width:96px;opacity:1}
+nav button:not([aria-current="page"]):active{background:rgba(85,100,42,.12)}
+@media (max-width:350px){nav{left:8px;right:8px;padding:5px;gap:2px}nav button[aria-current="page"]{flex-grow:2.7;gap:6px}nav button[aria-current="page"] .nl{font-size:13px}}
+@media (prefers-reduced-motion:reduce){nav button,nav .nl{transition:none}}
+/* header floats over the scroll: big title at rest, frosted compact bar once content moves under it */
+.app{padding-top:0}
+header{position:absolute;top:0;left:0;right:0;z-index:12;min-height:calc(64px + env(safe-area-inset-top,0px));padding:calc(6px + env(safe-area-inset-top,0px)) 16px 2px;background:rgba(242,243,228,0);-webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);box-shadow:0 1px 0 rgba(48,60,20,0);transition:background-color .3s ease,box-shadow .3s ease,backdrop-filter .3s ease,-webkit-backdrop-filter .3s ease,min-height .4s cubic-bezier(.16,1,.3,1),padding .4s cubic-bezier(.16,1,.3,1)}
+header.scrolled{min-height:calc(54px + env(safe-area-inset-top,0px));padding-top:calc(4px + env(safe-area-inset-top,0px));padding-bottom:0;background:rgba(242,243,228,.8);-webkit-backdrop-filter:blur(20px) saturate(1.3);backdrop-filter:blur(20px) saturate(1.3);box-shadow:0 1px 0 rgba(48,60,20,.08)}
+header .t{transition:font-size .45s cubic-bezier(.16,1,.3,1),letter-spacing .45s}
+header.scrolled .t,header.scrolled:has(.back) .t{font-size:24px;letter-spacing:.03em}
+header.scrolled .sos{height:40px;min-height:40px}
+header .back,header .sos{transition:transform .18s cubic-bezier(.16,1,.3,1),height .4s cubic-bezier(.16,1,.3,1)}
+main{padding-top:calc(76px + env(safe-area-inset-top,0px))}
+@media (max-width:350px){header.scrolled .t,header.scrolled:has(.back) .t{font-size:22px}}
+@media (prefers-reduced-motion:reduce){header,header .t,header .sos{transition:none}}
+/* tab bar v4: every tab keeps its name; one olive pill glides under the active tab */
+nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;padding:6px;isolation:isolate;--i:0}
+nav::before{content:'';position:absolute;z-index:-1;top:6px;bottom:6px;left:8px;width:calc((100% - 12px) / 5 - 4px);border-radius:24px;background:#55642A;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 4px 12px rgba(85,100,42,.35);transform:translateX(calc(var(--i) * (100% + 4px)));transition:transform .55s cubic-bezier(.34,1.35,.64,1)}
+nav button,nav button[aria-current="page"]{flex:none;height:58px;flex-direction:column;justify-content:center;align-items:center;gap:3px;padding:0 1px;border-radius:24px;background:none;box-shadow:none;font-size:11.5px;font-weight:600;letter-spacing:-.01em;color:#5F664B;transition:color .3s}
+nav button[aria-current="page"]{color:#F6F8E8;font-weight:700}
+nav button svg{width:24px;height:24px}
+nav button[aria-current="page"] svg{stroke:#D4E48C}
+nav .nl,nav button[aria-current="page"] .nl{max-width:none;opacity:1;overflow:visible;transition:none}
+nav button:not([aria-current="page"]):active{background:rgba(85,100,42,.1)}
+@media (max-width:350px){nav{padding:5px}nav::before{top:5px;bottom:5px;left:7px;width:calc((100% - 10px) / 5 - 4px)}nav button,nav button[aria-current="page"]{font-size:10.5px;letter-spacing:-.025em;height:56px}}
+@media (prefers-reduced-motion:reduce){nav::before{transition:none}}
+/* tab bar v4b: wider capsule so the longest name always fits inside its pill */
+nav{left:8px;right:8px;padding:4px}
+nav::before{top:4px;bottom:4px;left:6px;width:calc((100% - 8px) / 5 - 4px);border-radius:22px}
+nav button,nav button[aria-current="page"]{height:54px;font-weight:600;font-size:11.5px;letter-spacing:-.015em}
+@media (max-width:350px){nav{left:6px;right:6px;padding:4px}nav::before{top:4px;bottom:4px;left:6px;width:calc((100% - 8px) / 5 - 4px)}nav button,nav button[aria-current="page"]{font-size:10.5px;letter-spacing:-.03em;height:52px}}
+@media (max-width:390px){nav button,nav button[aria-current="page"]{font-size:11px;letter-spacing:-.025em}}
+@media (max-width:350px){nav button,nav button[aria-current="page"]{font-size:9.8px;letter-spacing:-.045em}}
+nav::before,nav::before{left:2px;width:calc((100% - 8px) / 5 + 4px);transform:translateX(calc(var(--i) * (100% - 4px)))}
+@media (max-width:350px){nav::before{left:2px;width:calc((100% - 8px) / 5 + 4px)}}
+@media (max-width:350px){nav button,nav button[aria-current="page"]{font-size:9.3px;letter-spacing:-.05em}nav button svg{width:22px;height:22px}}
 </style>
 
 <div class="app" id="app">
@@ -903,7 +947,9 @@ function render(){
   $('#hdr').innerHTML=`${S.stack.length?`<button class="back" data-act="back" aria-label="Назад">${ic('back')}</button>`:''}<span class="t">${title}</span><button class="sos" data-act="sos">${ic('sosi')}SOS</button>`;
   const m=$('#main'),sc=m.scrollTop,key=S.tab+'|'+JSON.stringify(S.stack),same=key===lastKey;lastKey=key;
   m.classList.toggle('noanim',same);m.innerHTML=body;if(!same)countUp();if(same||S.keep)m.scrollTop=sc;S.keep=false;
-  $('#nav').innerHTML=NAV.map(([k,n,i])=>`<button data-act="go" data-tab="${k}" ${S.tab===k?'aria-current="page"':''}>${ic(i)}${n}</button>`).join('');
+  $('#hdr').classList.toggle('scrolled',m.scrollTop>6);
+  $('#nav').style.setProperty('--i',Math.max(0,NAV.findIndex(x=>x[0]===S.tab)));
+  $('#nav').innerHTML=NAV.map(([k,n,i])=>`<button data-act="go" data-tab="${k}" aria-label="${n}" ${S.tab===k?'aria-current="page"':''}>${ic(i)}<span class="nl">${n}</span></button>`).join('');
   const qe=$('#qin');if(qe)autoGrow(qe);
   const lk=S.sos?'s'+S.sos:S.wiz?'w':'';$('#layer').innerHTML=(S.sos?sosSheet():S.wiz?wizSheet():'');
   if(lk&&lk!==layerKey){const sc=document.querySelector('#layer .scrim');if(sc)sc.classList.add('enter')}layerKey=lk;
@@ -937,6 +983,8 @@ function closeLayer(){const sc=document.querySelector('#layer .scrim'),fin=()=>{
   if(!sc||sc.classList.contains('leave')||matchMedia('(prefers-reduced-motion:reduce)').matches){fin();return}
   sc.classList.add('leave');setTimeout(fin,230)}
 
+(function(){const m=$('#main'),h=$('#hdr');let tick=0;
+  m.addEventListener('scroll',()=>{if(tick)return;tick=requestAnimationFrame(()=>{tick=0;h.classList.toggle('scrolled',m.scrollTop>6)})},{passive:true})})();
 document.addEventListener('click',e=>{
   if(e.target.classList&&e.target.classList.contains('scrim')&&(S.sos||S.wiz)){closeLayer();return}
   const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,d=b.dataset;
