@@ -1,0 +1,453 @@
+<title>Прототип мини-приложения</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --bg:#EEF0E3; --surface:#FBFCF5; --ink:#1A1E0F; --muted:#5A6044; --line:#D7DBC3; --track:#DADFC6;
+  --shell:#37461C; --shell-ink:#F5F7E8; --shell-soft:#C3CE9E;
+  --accent:#47591F; --accent-ink:#FFFFFF; --accent-soft:#E0E8C6;
+  --tape:#E8704E; --tape-ink:#2A0E06; --tape-text:#B03418; --tape-soft:#FBE2D8;
+  --lime:#C6D87A; --lime-ink:#1B2308; --sun:#F0C23E; --sun-ink:#2B2000; --ok:#1E7A4A;
+  --font:'Golos Text',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11140B; --surface:#1B2012; --ink:#EEF1E0; --muted:#A8AF8E; --line:#2E361F; --track:#2B331C; --shell:#34431A; --shell-soft:#B8C592;
+  --accent:#B6C86B; --accent-ink:#11140B; --accent-soft:#2A3416;
+  --tape-text:#FF9C80; --tape-soft:#3A2119; --ok:#7FD39B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11140B; --surface:#1B2012; --ink:#EEF1E0; --muted:#A8AF8E; --line:#2E361F; --track:#2B331C; --shell:#34431A; --shell-soft:#B8C592;
+  --accent:#B6C86B; --accent-ink:#11140B; --accent-soft:#2A3416;
+  --tape-text:#FF9C80; --tape-soft:#3A2119; --ok:#7FD39B; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%;overscroll-behavior:none}
+@supports (height:100dvh){html,body{height:100dvh}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.4;display:flex;justify-content:center;
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button{touch-action:manipulation;font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
+::selection{background:var(--shell);color:var(--shell-ink)}
+input,textarea{caret-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.app{width:100%;max-width:430px;height:100%;padding-top:env(safe-area-inset-top,0px);display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden}
+@media (min-width:600px) and (hover:hover) and (pointer:fine){
+  body{align-items:center;background:#D5D9C2}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{background:#070904}}
+  :root[data-theme="dark"] body{background:#070904}
+  .app{height:min(880px,100%);border-radius:30px;box-shadow:0 24px 60px rgba(0,0,0,.2)}
+}
+@media (pointer:coarse),(max-width:599px){.app{max-width:none;border-radius:0;box-shadow:none}body{display:block}}
+svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* shell header */
+header{background:var(--bg);color:var(--ink);padding:16px 16px 8px;display:flex;align-items:center;gap:10px;min-height:72px}
+header .t{font-size:30px;font-weight:800;letter-spacing:-.03em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+.back{width:44px;height:44px;border-radius:50%;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);display:grid;place-items:center;flex:none}
+.sos{height:44px;padding:0 16px 0 6px;border-radius:99px;background:var(--tape-soft);color:var(--tape-text);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--tape-text) 22%,transparent);font-weight:800;font-size:13px;letter-spacing:.08em;display:flex;align-items:center;gap:8px;flex:none}
+.sos svg{width:28px;height:28px;padding:6px;border-radius:50%;background:var(--tape-text);color:var(--tape-soft);stroke-width:2.4}
+main{flex:1;overflow-y:auto;padding:16px 16px 28px;display:flex;flex-direction:column;gap:20px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+main>*,.plan>*{flex-shrink:0}
+main::-webkit-scrollbar{width:6px}main::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+
+/* nav */
+nav{display:grid;grid-template-columns:repeat(5,1fr);background:var(--surface);border-top:1px solid var(--line);padding:8px 14px calc(10px + env(safe-area-inset-bottom,0px));gap:4px}
+nav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;font-size:11.5px;font-weight:600;color:var(--muted);border-radius:16px}
+nav button[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+nav button[aria-current="page"] svg{stroke-width:2.2}
+
+/* type */
+h2{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0}
+h3{font-size:16px;font-weight:700;margin:0;line-height:1.3}
+p{margin:0}
+.muted{color:var(--muted)}.sm{font-size:13px}
+.group{display:flex;flex-direction:column;gap:10px}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.head button{color:var(--accent);font-weight:600;font-size:14px}
+.cap{font-size:12px;font-weight:600;color:var(--muted)}
+
+/* controls */
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:1px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:44px;padding:0 15px;border-radius:99px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);font-size:14px;font-weight:600;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 20px;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:16px;width:100%}
+.btn.soft{background:var(--accent-soft);color:var(--accent)}
+.btn.sm{min-height:44px;width:auto;font-size:14px;padding:0 16px;border-radius:12px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--track);border-radius:13px;padding:3px;gap:3px}
+.seg button{min-height:44px;border-radius:10px;font-size:14px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.filters{display:flex;flex-direction:column;gap:10px}
+.fl{display:flex;flex-direction:column;gap:7px}
+.tag{font-size:13px;font-weight:600;color:var(--accent)}
+
+/* the time scale: the signature move */
+.scale{position:relative;height:20px;margin:0 0 -6px}
+.scale span{position:absolute;top:0;transform:translateX(-50%);font-size:12px;font-weight:600;color:var(--muted)}
+.scale.in{margin:0 14px -6px}
+.scale span:first-child{transform:none}.scale span:last-child{transform:translateX(-100%)}
+.tl{position:relative;border-radius:22px;background:var(--surface);overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+
+.wk{position:relative;display:block;width:100%;text-align:left;padding:13px 14px 14px;border-top:1px solid var(--line);transition:opacity .2s}
+.wk:first-child{border-top:0}
+.tl.has-focus .wk:not(.on) .bar,.tl.has-focus .wk:not(.on) .eff{opacity:.45}
+.wk .top{display:flex;align-items:baseline;gap:12px;justify-content:space-between}
+.wk .name{font-size:16px;font-weight:700;line-height:1.25}
+.wk .min{font-size:22px;font-weight:800;letter-spacing:-.02em;flex:none}
+.wk .min small{font-size:12px;font-weight:600;color:var(--muted);margin-left:2px;letter-spacing:0}
+.bar{position:relative;height:12px;margin-top:9px;border-radius:4px;background:linear-gradient(90deg,transparent calc(25% - 1px),var(--bg) calc(25% - 1px) calc(25% + 1px),transparent calc(25% + 1px) calc(50% - 1px),var(--bg) calc(50% - 1px) calc(50% + 1px),transparent calc(50% + 1px) calc(75% - 1px),var(--bg) calc(75% - 1px) calc(75% + 1px),transparent calc(75% + 1px)),var(--track)}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--accent);transform-origin:left;animation:grow .7s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--n,0)*45ms)}
+.bar.done i{background:var(--ok)}
+.sub{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:13px;color:var(--muted);font-weight:500;flex-wrap:wrap}
+.eff{display:inline-flex;gap:3px;align-items:flex-end;height:14px}
+.eff u{width:6px;border-radius:2px;background:var(--track);text-decoration:none}
+.eff u:nth-child(1){height:6px}.eff u:nth-child(2){height:10px}.eff u:nth-child(3){height:14px}
+.eff u.o{background:var(--tape)}
+.dn{color:var(--ok);font-weight:700;display:inline-flex;gap:4px;align-items:center}
+.more{display:none;margin-top:12px;gap:10px;flex-direction:column;position:relative}
+.wk.on .more{display:flex}
+.wk.on{background:var(--accent-soft)}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (prefers-reduced-motion:reduce){.bar i{animation:none}}
+
+/* today */
+.hero{background:var(--shell);color:var(--shell-ink);border-radius:26px;padding:20px 18px 18px;--bg:var(--shell);--track:rgba(255,255,255,.16);--muted:var(--shell-soft);position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-60px;top:-60px;width:190px;height:190px;border-radius:50%;box-shadow:0 0 0 28px rgba(198,216,122,.07),0 0 0 60px rgba(198,216,122,.045);pointer-events:none}
+.hero>*{position:relative;z-index:1}
+.hero h2{font-size:26px;line-height:1.1}
+.hero .bar i{background:var(--lime)}
+.hero .min{font-size:46px!important;font-weight:800;letter-spacing:-.04em;line-height:.9}
+.hero .min small{font-size:15px!important;font-weight:600}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--lime)}
+.btn.lime{background:var(--lime);color:var(--lime-ink)}
+.kick{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.li .ico.pl{background:var(--accent);color:var(--accent-ink);border-radius:50%}
+.ico.pl svg{fill:currentColor;stroke-width:1.5}
+.plan{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border-radius:22px;padding:16px;box-shadow:0 0 0 1px var(--line)}
+.plan .big{display:flex;align-items:baseline;gap:6px}
+.plan .big b{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.plan .big span{font-size:15px;font-weight:600;color:var(--muted)}
+.days{display:grid;grid-template-columns:repeat(21,1fr);gap:3px}
+.days u{height:12px;border-radius:2px;background:var(--track);text-decoration:none}
+.days u.d{background:var(--accent)}.days u.t{background:var(--sun)}
+.list{background:var(--surface);border-radius:22px;box-shadow:0 0 0 1px var(--line);overflow:hidden}
+.li{display:flex;gap:12px;align-items:center;padding:14px;width:100%;text-align:left;border-top:1px solid var(--line);min-height:56px}
+.li:first-child{border-top:0}
+.li .ico{width:42px;height:42px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.li .ico.p{background:var(--tape-soft);color:var(--tape-text)}
+.grow{flex:1;min-width:0}
+.chev{color:var(--muted)}
+.notice{display:flex;gap:12px;align-items:center;background:var(--sun);color:var(--sun-ink);border-radius:22px;padding:16px}
+.notice .btn{background:var(--sun-ink);color:var(--sun)}
+.panel{background:var(--surface);border-radius:22px;box-shadow:0 0 0 1px var(--line);padding:18px;display:flex;flex-direction:column;gap:12px}
+.video{aspect-ratio:16/9;border-radius:24px;background:radial-gradient(circle at 78% 18%,rgba(198,216,122,.22),transparent 55%),var(--shell);color:var(--shell-ink);display:grid;place-items:center;position:relative;overflow:hidden}
+.video::before{content:'';position:absolute;left:-40px;bottom:-70px;width:200px;height:200px;border-radius:50%;box-shadow:0 0 0 26px rgba(198,216,122,.07),0 0 0 56px rgba(198,216,122,.045)}
+.video svg{background:var(--lime);color:var(--lime-ink);border-radius:50%;padding:17px;box-sizing:content-box;position:relative}
+.video svg{width:26px;height:26px;stroke-width:2;fill:currentColor}
+.video span{position:absolute;left:14px;bottom:10px;font-size:12px;font-weight:600;color:var(--shell-soft)}
+.check{width:26px;height:26px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--line);display:grid;place-items:center;flex:none;color:transparent}
+.check.on{background:var(--ok);box-shadow:none;color:#fff}
+.num{width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--font);font-weight:700;font-size:14px;flex:none;font-variant-numeric:lining-nums;font-feature-settings:"ss01" 0,"salt" 0}
+.link{color:var(--accent);font-weight:600;font-size:14px;text-align:left;min-height:44px;display:inline-flex;align-items:center}
+.empty{padding:32px 12px;text-align:center;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);text-align:center}
+
+/* progress */
+.sl{display:flex;flex-direction:column;gap:2px}
+.sl .t{display:flex;justify-content:space-between;font-weight:600}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:32px;margin:0;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:var(--track)}
+input[type=range]::-moz-range-track{height:8px;border-radius:99px;background:var(--track)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-9px;border-radius:50%;background:var(--accent);border:4px solid var(--surface);box-shadow:0 0 0 1px var(--accent),0 2px 6px rgba(0,0,0,.25)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);border:4px solid var(--surface);box-shadow:0 0 0 1px var(--accent)}
+.cmp{display:flex;flex-direction:column;gap:6px}
+.cmp .r{display:flex;justify-content:space-between;font-weight:600}
+.cmp .d{font-weight:800}.cmp .d.up{color:var(--ok)}.cmp .d.dn2{color:var(--tape-text)}
+.trk{position:relative;height:12px;background:var(--track);border-radius:4px;margin:4px 6px}
+.trk .seg2{position:absolute;top:4px;height:4px;background:var(--accent);opacity:.35;border-radius:2px}
+.trk b{position:absolute;top:-2px;width:16px;height:16px;border-radius:50%;transform:translateX(-50%)}
+.trk .a{background:var(--surface);box-shadow:inset 0 0 0 3px var(--muted)}
+.trk .b{background:var(--accent)}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.photo{aspect-ratio:3/4;border-radius:16px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line);display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--muted);position:relative;overflow:hidden;text-align:center}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:0;box-shadow:inset 0 0 0 1px var(--line);border-radius:12px;padding:12px}
+.ans{background:var(--accent-soft);border-radius:12px;padding:12px;font-size:14px}
+.pill{font-size:12px;font-weight:700;background:var(--accent-soft);color:var(--accent);padding:3px 10px;border-radius:99px;white-space:nowrap}
+.badge{font-size:12px;font-weight:700;background:var(--tape);color:var(--tape-ink);padding:2px 8px;border-radius:99px}
+
+/* layers */
+.scrim{position:absolute;inset:0;background:rgba(8,10,4,.55);display:flex;align-items:flex-end;z-index:20}
+.sheet{background:var(--surface);width:100%;border-radius:24px 24px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;max-height:88%;overflow-y:auto;box-shadow:0 -8px 30px rgba(0,0,0,.25)}
+.toast{position:absolute;left:16px;right:16px;bottom:88px;background:var(--ink);color:var(--bg);padding:13px 14px;border-radius:14px;font-size:14px;font-weight:600;z-index:30;text-align:center}
+.ck{display:flex;gap:10px;align-items:center;font-size:14px}
+.ck input{appearance:none;-webkit-appearance:none;width:22px;height:22px;flex:none;border-radius:7px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--muted);display:grid;place-items:center;margin:0}
+.ck input:checked{background:var(--accent);box-shadow:none}
+.ck input:checked::after{content:'';width:10px;height:5px;border-left:2.5px solid var(--accent-ink);border-bottom:2.5px solid var(--accent-ink);transform:translateY(-1px) rotate(-45deg)}
+.ck input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="app" id="app">
+  <header id="hdr"></header>
+  <main id="main"></main>
+  <nav id="nav"></nav>
+  <div id="layer"></div>
+</div>
+
+<script>
+/* ---------- icons (drawn, one stroke) ---------- */
+const P={
+ today:'<path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/>',
+ move:'<circle cx="12" cy="5" r="2"/><path d="M12 8v6m-6-3 6-1 6 1m-9 10 3-7 3 7"/>',
+ chal:'<path d="M6 21V4m0 1h11l-2.5 4L17 13H6"/>',
+ chat:'<path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z"/>',
+ more:'<circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/>',
+ back:'<path d="m15 5-7 7 7 7"/>',chev:'<path d="m9 5 7 7-7 7"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+ star:'<path d="m12 4 2.4 5 5.5.7-4 3.8 1 5.5L12 16.4 7.1 19l1-5.5-4-3.8L9.6 9z"/>',
+ play:'<path d="M8 5.5v13l11-6.5z"/>',cam:'<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+ target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/>',
+ mind:'<path d="M12 20c-4-2-7-5-7-9a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 4-3 7-7 9z"/>',
+ food:'<path d="M5 11h14a7 7 0 0 1-14 0zM9 7c0-1.5 1-2 1-3.5M14 7c0-1.5 1-2 1-3.5"/>',
+ prog:'<path d="M4 19V5m0 14h16M8 15l4-4 3 3 5-6"/>',
+ foot:'<path d="M9 4c2 0 3 2 3 5s-1 4-3 4-3-1-3-3 1-6 3-6zM16 11c1.7 0 3 1.5 3 4s-1 5-3 5-3-1-3-3 1-6 3-6z"/>',
+ sosi:'<path d="M12 4v16M4 12h16"/>'
+};
+const ic=(n,c='')=>`<svg class="i ${c}" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
+
+/* ---------- data ---------- */
+const CATS={bb:'Body Balance',mob:'Спина и осанка',pil:'Пилатес и кор',pf:'Тазовое дно',rest:'Утро и вечер'};
+const LV=['Лёгкая','Средняя','Сильная'];
+const EX={
+  plank:{t:'Планка на предплечьях',steps:['Локти строго под плечами, предплечья параллельно.','Таз на одной линии с плечами и пятками.','Рёбра мягко «закрыты», живот подтянут к позвоночнику.','Дышите ровно, шея продолжает линию спины.'],err:['Таз провисает и нагружает поясницу','Плечи тянутся к ушам','Задержка дыхания','Взгляд вперёд вместо пола']},
+  bridge:{t:'Ягодичный мостик',steps:['Лёжа на спине, стопы на ширине таза, колени над пятками.','На выдохе поднимайте таз по одному позвонку.','Вверху сожмите ягодицы, рёбра не выпирают.','Опускайтесь медленно, от верхнего позвонка вниз.'],err:['Прогиб в пояснице вместо работы ягодиц','Колени падают внутрь','Давление на шею']},
+  deadbug:{t:'Dead bug',steps:['Поясница прижата к полу, колени над бёдрами.','Выдох: опускаем противоположные руку и ногу.','Диапазон ограничен тем, где поясница остаётся прижата.'],err:['Поясница отрывается от пола','Слишком быстрый темп','Рёбра расходятся']},
+  catcow:{t:'Кошка-корова',steps:['Упор на четвереньках, запястья под плечами.','Выдох: округляем спину, подбородок к груди.','Вдох: мягкий прогиб, грудь вперёд.'],err:['Движение только в пояснице','Локти блокируются','Резкие рывки']},
+  bird:{t:'Bird-dog',steps:['На четвереньках, спина нейтральная.','Вытяните противоположные руку и ногу.','Таз остаётся неподвижным, как чашка воды на пояснице.'],err:['Таз уходит в сторону','Нога поднята выше линии спины']},
+};
+const W=[
+ {id:1,t:'Ягодицы + кор',cat:'pil',min:30,lv:2,tags:['ягодицы','кор'],gear:'Коврик',ex:['bridge','plank','deadbug','bird'],d:'Мостики, подъёмы и стабилизация. Акцент на ягодицы без перегруза поясницы.'},
+ {id:2,t:'Ягодицы за 10 минут',cat:'pil',min:10,lv:1,tags:['ягодицы','быстро'],gear:'Коврик',ex:['bridge','bird'],d:'Короткая активация, если совсем нет времени.'},
+ {id:3,t:'Функциональный пресс',cat:'pil',min:25,lv:3,tags:['пресс','кор'],gear:'Коврик',ex:['deadbug','plank','bird'],d:'Глубокие мышцы кора и косые. Без скручиваний шеи.'},
+ {id:4,t:'Полный Body Balance',cat:'bb',min:55,lv:3,tags:['всё тело','баланс','табата'],gear:'Коврик, резинка',ex:['plank','bridge','catcow','deadbug','bird'],d:'Полноценная тренировка на силу, баланс и контроль тела.'},
+ {id:5,t:'Баланс и устойчивость',cat:'bb',min:20,lv:2,tags:['баланс','стопы'],gear:'Без инвентаря',ex:['bird','plank'],d:'Работаем с равновесием и стабилизаторами.'},
+ {id:6,t:'Мобильность позвоночника',cat:'mob',min:20,lv:1,tags:['спина','осанка'],gear:'Коврик',ex:['catcow','bird'],d:'Бережно возвращаем подвижность всем отделам позвоночника.'},
+ {id:7,t:'Спина при грыжах',cat:'mob',min:15,lv:1,tags:['спина','грыжи','бережно'],gear:'Коврик',ex:['catcow','deadbug'],d:'Щадящий комплекс без осевых нагрузок и скручиваний.'},
+ {id:8,t:'Осанка за столом',cat:'mob',min:10,lv:1,tags:['осанка','шея','быстро'],gear:'Без инвентаря',ex:['catcow'],d:'Для тех, кто много сидит. Можно делать в офисе.'},
+ {id:9,t:'Тазовое дно: база',cat:'pf',min:15,lv:1,tags:['тазовое дно','дыхание'],gear:'Коврик',ex:['bridge','deadbug'],d:'Связываем дыхание, тазовое дно и глубокий пресс.'},
+ {id:10,t:'Тазовое дно + кор',cat:'pf',min:30,lv:2,tags:['тазовое дно','кор'],gear:'Коврик',ex:['bridge','deadbug','bird','plank'],d:'Усложнённая версия базового комплекса.'},
+ {id:11,t:'Утро: противоотёчная',cat:'rest',min:10,lv:1,tags:['отёки','утро','быстро'],gear:'Без инвентаря',ex:['catcow'],d:'Запускаем лимфоток и просыпаемся за 10 минут.'},
+ {id:12,t:'Вечер: потягушки',cat:'rest',min:15,lv:1,tags:['расслабление','вечер'],gear:'Коврик',ex:['catcow'],d:'Мягкая растяжка, чтобы выдохнуть после дня.'},
+];
+const SOS=[
+ {id:101,t:'Защемило спину',min:7,d:'Щадящие движения, чтобы снять спазм. Без резких наклонов.'},
+ {id:102,t:'Болит шея',min:5,d:'Мягкая мобилизация шейного отдела и плеч.'},
+ {id:103,t:'Скованность после сна',min:6,d:'Быстро расходиться, если «не разогнуться».'},
+];
+const CH=[
+ {id:1,t:'Выйти из похмельной недели',days:7,st:'Скоро',d:'Убираем отёчность после праздников: утренние противоотёчные, прогулки, вода.',picks:'Утро: противоотёчная, Мобильность, Вечер: потягушки'},
+ {id:2,t:'Перед Новым годом: подтянуться',days:21,st:'Идёт набор',d:'Больше силовых из базы и табата. Три силовых в неделю.',picks:'Ягодицы + кор, Функциональный пресс, Полный Body Balance'},
+ {id:3,t:'Весенний детокс к 8 марта',days:14,st:'Архив',d:'Лёгкая нагрузка, дыхание и питание.',picks:'Мобильность, Тазовое дно'},
+];
+const FOOD=[
+ {t:'Конструктор тарелки при похудении',k:'Курс',d:'Как сочетать белок, клетчатку и жиры. Чего лучше не делать.'},
+ {t:'Завтрак за 7 минут: творог и ягоды',k:'Рецепт',d:'Белковый завтрак без варки.'},
+ {t:'Перекус, который не раскачивает сахар',k:'Идеи',d:'Пять вариантов на работу.'},
+ {t:'Почему срываются вечером',k:'Привычки',d:'Разбор: как выстроить день, чтобы вечер не был голодным.'},
+];
+const MIND=[
+ {t:'Сосредоточение',min:8,k:'Медитация'},{t:'Вечернее расслабление',min:12,k:'Медитация'},{t:'Контакт с телом',min:10,k:'Медитация'},
+ {t:'Дыхание 4-6',min:5,k:'Дыхание'},{t:'Осознанность за чашкой чая',min:6,k:'Практика'},
+];
+const HAB=[
+ {t:'Не сидеть больше 50 минут',d:'Таймер, встать, 10 приседаний или просто пройтись.'},
+ {t:'Как набрать шаги, если работаешь сидя',d:'Звонки на ходу, лестница, остановка раньше.'},
+ {t:'Минимум дня',d:'Даже в тяжёлый день: 5 минут и стакан воды.'},
+];
+const DIARY=[['energy','Энергия'],['sleep','Сон'],['back','Лёгкость в спине'],['swell','Отсутствие отёков'],['mood','Настроение']];
+const BASE={energy:4,sleep:5,back:3,swell:3,mood:5};
+const TESTS=[
+ {t:'Наклон вперёд стоя',d:'Дотянитесь ладонями до пола с прямыми ногами.',a:'пальцы у колен',b:'ладони на полу'},
+ {t:'Баланс на одной ноге',d:'Стойте с закрытыми глазами, считайте секунды.',a:'8 сек',b:'21 сек'},
+ {t:'Глубокий присед',d:'Пятки на полу, спина нейтральная.',a:'пятки отрываются',b:'пятки на полу'},
+];
+const QA=[
+ {q:'Можно ли делать мостики при грыже L5-S1?',a:'Да, в щадящей амплитуде. Начните с «Спина при грыжах», а мостик делайте без прогиба в пояснице.'},
+ {q:'Как совмещать тренировки и график 2 через 2?',a:'Берите короткие (10-15 минут) в рабочие дни и одну длинную в выходной. Это есть в чек-листе программы.'},
+];
+
+/* ---------- state ---------- */
+const S={tab:'today',stack:[],cat:'all',time:'any',power:'any',tags:[],seg:'wk',focus:null,mf:false,done:new Set([6]),fav:new Set([1]),joined:new Set([2]),
+  diary:{energy:6,sleep:6,back:5,swell:5,mood:7},cmp:false,tseg:'dia',chat:'qa',photos:{a:null,b:null},qa:QA.slice(),sos:null,wiz:false,toast:'',keep:false};
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const eff=n=>`<span class="eff" role="img" aria-label="${LV[n-1]}">${[1,2,3].map(i=>`<u class="${i<=n?'o':''}"></u>`).join('')}</span>`;
+const NAV=[['today','Сегодня','today'],['move','Движение','move'],['chal','Челленджи','chal'],['chat','Общение','chat'],['more','Ещё','more']];
+const SC=60;
+const scaleStrip=(c='')=>`<div class="scale ${c}" aria-hidden="true">${[0,15,30,45,60].map(m=>`<span style="left:${m/SC*100}%">${m}</span>`).join('')}</div>`;
+
+/* ---------- screens ---------- */
+function bar(w,n){return `<div class="bar ${S.done.has(w.id)?'done':''}"><i style="width:${w.min/SC*100}%;--n:${n}"></i></div>`}
+function wRow(w,n,expand){
+  const on=expand&&S.focus===w.id;
+  return `<button class="wk ${on?'on':''}" data-act="${expand?'focus':'open'}" data-id="${w.id}" aria-expanded="${expand?on:'undefined'}">
+   <span class="top"><span class="name">${w.t}</span><span class="min">${w.min}<small>мин</small></span></span>${bar(w,n)}
+   <span class="sub">${eff(w.lv)}<span>${LV[w.lv-1]}</span><span>${CATS[w.cat]}</span>${S.done.has(w.id)?`<span class="dn">${ic('check')}Выполнено</span>`:''}</span>
+   ${expand?`<span class="more"><span class="muted sm">${w.d}</span><span class="tag">${w.tags.map(t=>'#'+t).join('  ')}</span><span class="sm muted">${w.gear}</span>
+    <span class="btn sm" role="presentation" data-act="open" data-id="${w.id}" style="width:100%">Открыть тренировку</span></span>`:''}
+  </button>`}
+
+function today(){
+  const pl=W[0],ch=CH[1];
+  return `
+  <div class="plan hero"><span class="eyebrow">План на сегодня</span><div class="head"><h2>${pl.t}</h2><span class="min" style="flex:none">${pl.min}<small class="cap"> мин</small></span></div>
+   ${scaleStrip()}<div class="bar" style="margin-top:0"><i style="width:${pl.min/SC*100}%"></i></div>
+   <div class="sub" style="margin-top:0">${eff(pl.lv)}<span>${LV[pl.lv-1]}</span><span>Месяц: кор и ягодицы, неделя 3</span></div>
+   <button class="btn lime" data-act="open" data-id="${pl.id}">${ic('play')}Начать</button></div>
+  <div class="list">
+   <button class="li" data-act="wizard"><span class="ico">${ic('target')}</span><span class="grow"><b>Подобрать тренировку</b><span class="muted sm" style="display:block">По времени и силам</span></span>${ic('chev','chev')}</button>
+   <button class="li" data-act="sos"><span class="ico p">${ic('sosi')}</span><span class="grow"><b>Болит спина или шея</b><span class="muted sm" style="display:block">SOS-тренировки, 5–7 минут</span></span>${ic('chev','chev')}</button>
+   <button class="li" data-act="go" data-tab="more" data-sub="mind"><span class="ico">${ic('mind')}</span><span class="grow"><b>Медитация</b><span class="muted sm" style="display:block">5–12 минут</span></span>${ic('chev','chev')}</button></div>
+  <div class="notice"><div class="grow"><b>Прошёл месяц</b><p class="sm">Две минуты на дневник, и вы увидите, что изменилось.</p></div>
+   <button class="btn sm" data-act="go" data-tab="more" data-sub="progress">Заполнить</button></div>
+  <div class="group"><div class="head"><h2>${ch.t}</h2></div>
+   <div class="group"><div class="days" role="img" aria-label="День 9 из 21">${Array.from({length:21},(_,i)=>`<u class="${i<8?'d':i===8?'t':''}"></u>`).join('')}</div>
+    <p class="sm muted">День 9 из ${ch.days}. Серия: 4 дня подряд.</p></div></div>
+  <p class="note">Прототип. Все данные примерные.</p>`;
+}
+
+function move(){
+  const seg=`<div class="seg">${[['wk','Тренировки'],['ex','Разбор'],['rel','Самомассаж']].map(([k,n])=>`<button data-act="seg" data-k="${k}" aria-pressed="${S.seg===k}">${n}</button>`).join('')}</div>`;
+  if(S.seg==='ex') return seg+`<div class="list">${Object.entries(EX).map(([id,e])=>`<button class="li" data-act="ex" data-id="${id}"><span class="ico">${ic('play')}</span><span class="grow"><b>${e.t}</b><span class="muted sm" style="display:block">Техника и типичные ошибки</span></span>${ic('chev','chev')}</button>`).join('')}</div>`;
+  if(S.seg==='rel') return seg+`<div class="panel"><h3>Принципы самомассажа</h3><p class="muted sm">Сначала видео от эксперта, затем сессии по зонам.</p></div>
+    <div class="list">${[['Стопы и голени',8],['Спина с мячом',12],['Шея и плечи',6]].map(([n,m])=>`<div class="li"><span class="grow"><b>${n}</b>${(()=>{return `<div class="bar"><i style="width:${m/SC*100}%"></i></div>`})()}</span><span><b style="font-size:20px">${m}</b> <span class="cap">мин</span></span></div>`).join('')}</div>`;
+  const tags=[...new Set(W.flatMap(w=>w.tags))];
+  const inTime=w=>S.time==='any'||(S.time==='15'&&w.min<=15)||(S.time==='30'&&w.min>15&&w.min<=30)||(S.time==='45'&&w.min>30);
+  const res=W.filter(w=>(S.cat==='all'||w.cat===S.cat)&&inTime(w)&&(S.power==='any'||w.lv==S.power)&&S.tags.every(t=>w.tags.includes(t))).sort((a,b)=>b.min-a.min);
+  const c=(act,k,cur,n)=>`<button class="chip" data-act="${act}" data-k="${k}" aria-pressed="${cur===k}">${n}</button>`;
+  const dirty=S.cat!=='all'||S.time!=='any'||S.power!=='any'||S.tags.length;
+  return seg+`<div class="filters">
+   <div class="fl"><span class="cap">Время</span><div class="chips" role="group" aria-label="Сколько времени">${[['any','Любое'],['15','до 15'],['30','15–30'],['45','30+']].map(([k,n])=>c('time',k,S.time,n)).join('')}</div></div>
+   <div class="fl"><span class="cap">Нагрузка</span><div class="chips" role="group" aria-label="Сколько сил">${[['any','Любые'],['1','Мало'],['2','Средне'],['3','Много']].map(([k,n])=>c('power',k,S.power,n)).join('')}</div></div>
+   <button class="link" data-act="morefl" aria-expanded="${S.mf}">${S.mf?'Скрыть фильтры':'Раздел и акцент'}${dirty?' (выбрано)':''}</button>
+   ${S.mf?`<div class="fl"><span class="cap">Раздел</span><div class="chips">${c('cat','all',S.cat,'Все')}${Object.entries(CATS).map(([k,n])=>c('cat',k,S.cat,n)).join('')}</div></div>
+   <div class="fl"><span class="cap">Акцент</span><div class="chips">${tags.map(t=>`<button class="chip" data-act="tag" data-k="${t}" aria-pressed="${S.tags.includes(t)}">#${t}</button>`).join('')}</div></div>`:''}</div>
+  <div class="group"><div class="head"><h2>Найдено ${res.length}</h2>${dirty?'<button data-act="reset">Сбросить</button>':''}</div>
+  ${res.length?`${scaleStrip('in')}<div class="tl ${S.focus?'has-focus':''}">${res.map((w,i)=>wRow(w,i,true)).join('')}</div>`:'<div class="empty">Ничего не нашлось. Уберите один фильтр.</div>'}</div>`;
+}
+function detail(id){
+  const w=W.find(x=>x.id===id),done=S.done.has(id);
+  return `<div class="video">${ic('play')}<span>Видео тренировки</span></div>
+  <div class="group"><h2 style="font-size:26px">${w.t}</h2>
+   <div class="card plan"><div class="head"><b style="font-size:22px">${w.min} <small class="cap">мин</small></b><span class="cap">${LV[w.lv-1]}</span></div>${scaleStrip()}<div class="bar" style="margin-top:0"><i style="width:${w.min/SC*100}%"></i></div>
+   <div class="sub" style="margin-top:0">${eff(w.lv)}<span>${LV[w.lv-1]}</span><span>${w.gear}</span></div></div>
+   <p>${w.d}</p><div class="tag">${w.tags.map(t=>'#'+t).join('  ')}</div></div>
+  <div class="group"><h2>Упражнения</h2><div class="list">${w.ex.map((e,i)=>`<div class="li"><span class="num">${i+1}</span><span class="grow"><b>${EX[e].t}</b><button class="link" data-act="ex" data-id="${e}" style="display:block">Как делать правильно</button></span></div>`).join('')}</div></div>
+  <div style="display:flex;gap:10px"><button class="btn" data-act="done" data-id="${id}">${done?ic('check')+'Выполнено':'Отметить выполненной'}</button>
+  <button class="btn soft" data-act="fav" data-id="${id}" aria-label="${S.fav.has(id)?'Убрать из избранного':'В избранное'}" style="width:54px;flex:none;padding:0">${ic('star')}</button></div>`;
+}
+function exDetail(id){const e=EX[id];return `<div class="video">${ic('play')}<span>Видео-разбор</span></div>
+ <h2 style="font-size:26px">${e.t}</h2>
+ <div class="panel"><h3>Техника</h3>${e.steps.map((s,i)=>`<div style="display:flex;gap:12px;align-items:flex-start"><span class="num">${i+1}</span><span>${s}</span></div>`).join('')}</div>
+ <div class="panel" style="background:var(--tape-soft)"><h3 style="color:var(--tape-text)">Типичные ошибки</h3>${e.err.map(s=>`<div style="display:flex;gap:10px">${ic('plus','')}<span>${s}</span></div>`).join('').replace(/<svg class="i "/g,'<svg class="i" style="transform:rotate(45deg);color:var(--tape-text);flex:none"')}</div>`}
+
+function chal(){return `<p class="muted">Тематические подборки из тренировок, которые уже есть в базе.</p>`+CH.map(c=>`
+  <div class="panel"><div class="head"><h3>${c.t}</h3><span class="pill">${S.joined.has(c.id)?'Вы участвуете':c.st}</span></div>
+  <p class="sm muted">${c.d}</p>
+  <div class="days" style="grid-template-columns:repeat(${c.days},1fr)" aria-hidden="true">${Array.from({length:c.days},(_,i)=>`<u class="${S.joined.has(c.id)&&c.id===2&&i<9?'d':''}"></u>`).join('')}</div>
+  <p class="cap">${c.days} дней · ${c.picks}</p>
+  ${c.st==='Архив'?'':`<button class="btn sm ${S.joined.has(c.id)?'soft':''}" data-act="join" data-id="${c.id}" style="align-self:flex-start">${S.joined.has(c.id)?'Выйти из челленджа':'Присоединиться'}</button>`}</div>`).join('')}
+
+function chat(){
+  const seg=`<div class="seg">${[['qa','Вопросы эксперту'],['talk','Обсуждения']].map(([k,n])=>`<button data-act="chatseg" data-k="${k}" aria-pressed="${S.chat===k}">${n}</button>`).join('')}</div>`;
+  if(S.chat==='talk') return seg+`<div class="list">${[['Челлендж «Перед Новым годом»',42,3],['Питание и рецепты',18,0],['Болтушка',120,0]].map(([t,n,b])=>`<button class="li" data-act="toast" data-m="В прототипе чат не открывается"><span class="grow"><b>${t}</b><span class="muted sm" style="display:block">${n} участниц</span></span>${b?`<span class="badge">${b}</span>`:''}</button>`).join('')}</div><p class="note">Формат общения (чат, ветки или лента) уточняется у заказчика.</p>`;
+  return seg+`<div class="panel"><h3>Задать вопрос</h3><textarea id="qin" rows="3" aria-label="Ваш вопрос" placeholder="Например: можно ли делать планку при диастазе?"></textarea>
+   <label class="ck"><input type="checkbox" id="anon">Отправить анонимно</label><button class="btn sm" data-act="ask" style="align-self:flex-start">Отправить</button></div>
+   <div class="group"><div class="head"><h2>Ответы эксперта</h2><span class="pill">Пример</span></div>${S.qa.map(x=>`<div class="panel"><b>${esc(x.q)}</b>${x.a?`<div class="ans">${esc(x.a)}</div>`:'<span class="sm muted">Ждёт ответа. Сообщим в Telegram, когда эксперт ответит.</span>'}</div>`).join('')}</div>`;
+}
+
+function more(){
+  const it=[['nutr','food','Питание','Конструкт, рецепты, привычки'],['mind','mind','Mind','Медитации и дыхание'],['progress','prog','Прогресс','Дневник, тесты, фото, замеры'],['habit','foot','Привычки и лайфхаки','Шаги, меньше сидеть']];
+  return `<div class="list">${it.map(([k,i,t,d])=>`<button class="li" data-act="sub" data-id="${k}"><span class="ico">${ic(i)}</span><span class="grow"><b>${t}</b><span class="muted sm" style="display:block">${d}</span></span>${ic('chev','chev')}</button>`).join('')}</div>
+  <div class="panel"><div class="head"><div><b>Абонемент</b><p class="sm muted">Активен до 23 декабря</p></div><button class="btn sm soft">Продлить</button></div></div>`}
+function nutr(){return `<div class="list">${FOOD.map(f=>`<div class="li" style="align-items:flex-start"><span class="grow"><span class="kick">${f.k}</span><b style="display:block;margin-top:4px;font-size:16px">${f.t}</b><span class="sm muted">${f.d}</span></span></div>`).join('')}</div>`}
+function mind(){return `<div class="list">${MIND.map(m=>`<button class="li" data-act="toast" data-m="Играет: ${m.t}"><span class="ico pl">${ic('play')}</span><span class="grow"><b>${m.t}</b><span class="muted sm" style="display:block">${m.k}</span><div class="bar"><i style="width:${m.min/SC*100}%"></i></div></span><span><b style="font-size:20px">${m.min}</b> <span class="cap">мин</span></span></button>`).join('')}</div><p class="note">Все практики светские.</p>`}
+function habit(){return HAB.map((h,i)=>`<div class="panel" style="flex-direction:row;gap:14px"><span class="num" style="background:var(--accent);color:var(--accent-ink);flex:none">${i+1}</span><div class="group" style="gap:4px"><h3>${h.t}</h3><p class="sm muted">${h.d}</p></div></div>`).join('')}
+
+function progress(){
+  const seg=`<div class="seg">${[['dia','Дневник'],['test','Тесты'],['photo','Фото']].map(([k,n])=>`<button data-act="tseg" data-k="${k}" aria-pressed="${S.tseg===k}">${n}</button>`).join('')}</div>`;
+  if(S.tseg==='test') return seg+`<div class="head"><p class="muted sm">Тесты вы выполняете сами: в начале месяца и через месяц.</p><span class="pill">Пример</span></div>`+TESTS.map(t=>`<div class="panel"><h3>${t.t}</h3><p class="sm muted">${t.d}</p><div class="cmp"><div class="r"><span class="muted">Старт</span><span>${t.a}</span></div><div class="r"><span class="muted">Сейчас</span><span style="color:var(--ok)">${t.b}</span></div></div></div>`).join('')+`<p class="note">Это самооценка, а не медицинская диагностика.</p>`;
+  if(S.tseg==='photo') return seg+`<p class="muted sm">Селфи на старте и через месяц. Фото видите только вы. Шаг можно пропустить.</p>
+   <div class="photos">${['a','b'].map(k=>`<div class="photo">${S.photos[k]?`<img alt="Фото ${k==='a'?'на старте':'через месяц'}" src="${S.photos[k]}">`:`${ic('cam')}<span>${k==='a'?'Старт':'Через месяц'}</span><span class="tag">Сделать фото</span>`}<input type="file" accept="image/*" capture="user" data-photo="${k}" aria-label="Фото: ${k==='a'?'старт':'через месяц'}"></div>`).join('')}</div>
+   <div class="panel"><p class="sm muted">Здесь будет анализ по селфи. Что именно анализируем, уточняется.</p></div>`;
+  const sl=DIARY.map(([k,n])=>`<div class="sl"><div class="t"><label for="d-${k}">${n}</label><span id="v-${k}">${S.diary[k]}</span></div><input type="range" id="d-${k}" min="1" max="10" value="${S.diary[k]}" data-d="${k}"></div>`).join('');
+  const cmp=S.cmp?`<div class="panel" style="box-shadow:inset 0 0 0 2px var(--accent)"><h2>Ваш месяц</h2>${DIARY.map(([k,n])=>{const d=S.diary[k]-BASE[k];const lo=Math.min(BASE[k],S.diary[k]),hi=Math.max(BASE[k],S.diary[k]);
+   return `<div class="cmp"><div class="r"><span>${n}</span><span class="d ${d>0?'up':d<0?'dn2':''}">${BASE[k]} → ${S.diary[k]}  (${d>0?'+':''}${d})</span></div><div class="trk"><span class="seg2" style="left:${lo*10-5}%;width:${(hi-lo)*10}%"></span><b class="a" style="left:${BASE[k]*10-5}%"></b><b class="b" style="left:${S.diary[k]*10-5}%"></b></div></div>`}).join('')}
+   <p class="sm muted">Пустой круг: месяц назад. Заполненный: сейчас. Это ваш результат, а не только цифра на весах.</p></div>`:'';
+  return seg+`<div class="panel"><h2>Дневник самочувствия</h2><p class="sm muted">Оцените от 1 до 10. Сравним с первым заполнением месяц назад.</p>${sl}<button class="btn" data-act="cmp">Сохранить и сравнить</button></div>${cmp}
+   <div class="panel"><div class="head"><h3>Замеры</h3><span class="pill">Пример</span></div><div class="cmp"><div class="r"><span class="muted">Вес</span><span>64,2 → 62,8 кг</span></div><div class="r"><span class="muted">Талия</span><span>74 → 71 см</span></div><div class="r"><span class="muted">Бёдра</span><span>99 → 97 см</span></div></div></div>`;
+}
+
+/* ---------- shell ---------- */
+const TITLES={today:'Сегодня',move:'Движение',chal:'Челленджи',chat:'Общение',more:'Ещё'};
+const SUBT={nutr:['Питание',nutr],mind:['Mind',mind],progress:['Прогресс',progress],habit:['Привычки',habit]};
+function render(){
+  const top=S.stack[S.stack.length-1];let title=TITLES[S.tab],body;
+  if(top){if(top.t==='wk'){title='Тренировка';body=detail(top.id)}else if(top.t==='ex'){title='Разбор';body=exDetail(top.id)}else{title=SUBT[top.id][0];body=SUBT[top.id][1]()}}
+  else body={today,move,chal,chat,more}[S.tab]();
+  $('#hdr').innerHTML=`${S.stack.length?`<button class="back" data-act="back" aria-label="Назад">${ic('back')}</button>`:''}<span class="t">${title}</span><button class="sos" data-act="sos">${ic('sosi')}SOS</button>`;
+  const m=$('#main'),sc=m.scrollTop;m.innerHTML=body;if(S.keep)m.scrollTop=sc;S.keep=false;
+  $('#nav').innerHTML=NAV.map(([k,n,i])=>`<button data-act="go" data-tab="${k}" ${S.tab===k&&!S.stack.length?'aria-current="page"':''}>${ic(i)}${n}</button>`).join('');
+  $('#layer').innerHTML=(S.sos?sosSheet():S.wiz?wizSheet():'')+(S.toast?`<div class="toast" role="status">${esc(S.toast)}</div>`:'');
+}
+function sosSheet(){const s=S.sos;
+  if(s==='intro')return `<div class="scrim"><div class="sheet" role="dialog" aria-label="Экстренные тренировки"><h2>Экстренные тренировки</h2>
+  <p class="muted sm">Не заменяют консультацию врача. При острой боли, онемении, слабости в ноге или после травмы обратитесь к врачу.</p>
+  <label class="ck"><input type="checkbox" id="okd">Я прочитала и понимаю</label>
+  <div class="list" style="background:var(--bg)">${SOS.map(x=>`<button class="li" data-act="sosgo" data-id="${x.id}"><span class="grow"><b>${x.t}</b><span class="muted sm" style="display:block">${x.d}</span></span><span><b style="font-size:20px">${x.min}</b> <span class="cap">мин</span></span></button>`).join('')}</div>
+  <button class="btn soft" data-act="close">Закрыть</button></div></div>`;
+  const x=SOS.find(y=>y.id===s);return `<div class="scrim"><div class="sheet" role="dialog" aria-label="${x.t}"><h2>${x.t}</h2><p class="muted">${x.d}</p><button class="btn" data-act="toast" data-m="Видео запущено (в прототипе без видео)">${ic('play')}Начать, ${x.min} мин</button><button class="btn soft" data-act="close">Закрыть</button></div></div>`}
+let wiz={t:null,p:null};
+function wizSheet(){const o=(k,v,n)=>`<button class="chip" data-act="w" data-k="${k}" data-v="${v}" aria-pressed="${wiz[k]===v}">${n}</button>`;
+  return `<div class="scrim"><div class="sheet" role="dialog" aria-label="Подобрать тренировку"><h2>Подобрать тренировку</h2><div class="fl"><span class="cap">Сколько времени</span><div class="chips">${o('t','15','до 15 мин')}${o('t','30','15–30')}${o('t','45','30+')}</div></div>
+  <div class="fl"><span class="cap">Сколько сил</span><div class="chips">${o('p','1','Мало')}${o('p','2','Средне')}${o('p','3','Много')}</div></div>
+  <button class="btn" data-act="wgo">Показать</button><button class="btn soft" data-act="close">Закрыть</button></div></div>`}
+let tt;function toast(m){S.toast=m;S.keep=true;render();clearTimeout(tt);tt=setTimeout(()=>{S.toast='';S.keep=true;render()},1800)}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,d=b.dataset;
+  if(a==='go'){S.tab=d.tab;S.stack=[];S.focus=null;if(d.sub)S.stack.push({t:'sub',id:d.sub})}
+  else if(a==='sub')S.stack.push({t:'sub',id:d.id});
+  else if(a==='back')S.stack.pop();
+  else if(a==='open'){S.stack.push({t:'wk',id:+d.id});S.focus=null}
+  else if(a==='focus'){S.focus=S.focus===+d.id?null:+d.id}
+  else if(a==='ex')S.stack.push({t:'ex',id:d.id});
+  else if(a==='morefl')S.mf=!S.mf;
+  else if(a==='seg'){S.seg=d.k;S.focus=null}
+  else if(a==='cat'){S.cat=d.k;S.focus=null}
+  else if(a==='time'){S.time=d.k;S.focus=null}
+  else if(a==='power'){S.power=d.k;S.focus=null}
+  else if(a==='tag'){S.tags=S.tags.includes(d.k)?S.tags.filter(x=>x!==d.k):[...S.tags,d.k];S.focus=null}
+  else if(a==='reset'){S.cat='all';S.time='any';S.power='any';S.tags=[];S.focus=null}
+  else if(a==='done'){const i=+d.id;S.done.has(i)?S.done.delete(i):S.done.add(i)}
+  else if(a==='fav'){const i=+d.id;S.fav.has(i)?S.fav.delete(i):S.fav.add(i);toast(S.fav.has(i)?'Добавлено в избранное':'Убрано из избранного');return}
+  else if(a==='join'){const i=+d.id;S.joined.has(i)?S.joined.delete(i):S.joined.add(i)}
+  else if(a==='chatseg')S.chat=d.k;
+  else if(a==='tseg')S.tseg=d.k;
+  else if(a==='cmp')S.cmp=true;
+  else if(a==='ask'){const v=$('#qin').value.trim();if(!v){toast('Напишите вопрос');return}S.qa.unshift({q:($('#anon').checked?'Анонимно: ':'')+v,a:''});toast('Вопрос отправлен');return}
+  else if(a==='sos')S.sos='intro';
+  else if(a==='sosgo'){if(!$('#okd').checked){toast('Подтвердите, что прочитали предупреждение');return}S.sos=+d.id}
+  else if(a==='close'){S.sos=null;S.wiz=false}
+  else if(a==='wizard'){S.wiz=true;wiz={t:null,p:null}}
+  else if(a==='w'){wiz[d.k]=d.v}
+  else if(a==='wgo'){S.time=wiz.t||'any';S.power=wiz.p||'any';S.cat='all';S.tags=[];S.seg='wk';S.wiz=false;S.tab='move';S.stack=[];S.focus=null}
+  else if(a==='toast'){toast(d.m);return}
+  S.keep=['seg','cat','time','power','tag','done','join','focus','morefl','chatseg','tseg','cmp','sos','sosgo','close','w'].includes(a);
+  render();if(['go','sub','back','open','ex','wgo'].includes(a))$('#main').scrollTop=0;
+});
+document.addEventListener('input',e=>{const k=e.target.dataset.d;if(k){S.diary[k]=+e.target.value;$('#v-'+k).textContent=e.target.value}});
+document.addEventListener('change',e=>{const k=e.target.dataset.photo;if(!k||!e.target.files[0])return;const r=new FileReader();r.onload=()=>{S.photos[k]=r.result;S.keep=true;render()};r.readAsDataURL(e.target.files[0])});
+render();
+</script>
