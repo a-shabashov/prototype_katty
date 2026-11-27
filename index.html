@@ -527,6 +527,23 @@ nav{position:absolute;left:14px;right:14px;bottom:calc(10px + env(safe-area-inse
 main{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
 main{scrollbar-width:none;scrollbar-gutter:auto}
 main::-webkit-scrollbar{display:none;width:0;height:0}
+/* motion: messages rise from the bottom above the tab bar; sheets slide up over a fading scrim */
+.toast{top:auto;bottom:calc(112px + env(safe-area-inset-bottom,0px));transform:translate(-50%,28px) scale(.96);transition:opacity .22s ease,transform .26s cubic-bezier(.5,0,.9,.4)}
+.toast.show{transform:translate(-50%,0) scale(1);transition:opacity .3s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.toast.show .ti{animation:tipop .55s .1s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes tipop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.scrim.enter{animation:scrimin .3s ease both}
+.scrim.enter .sheet{animation:sheetin .52s cubic-bezier(.16,1,.3,1) both}
+.scrim.leave{animation:scrimout .23s ease forwards}
+.scrim.leave .sheet{animation:sheetout .23s cubic-bezier(.5,0,.9,.4) forwards}
+@keyframes scrimin{from{background:rgba(5,7,3,0)}to{background:rgba(5,7,3,.66)}}
+@keyframes scrimout{to{background:rgba(5,7,3,0)}}
+@keyframes sheetin{from{transform:translateY(100%)}to{transform:none}}
+@keyframes sheetout{to{transform:translateY(100%)}}
+@media (prefers-reduced-motion:reduce){.toast,.toast.show{transform:translate(-50%,0);transition:opacity .01s}.toast.show .ti,.scrim.enter,.scrim.enter .sheet{animation:none}}
+.toast{background:var(--surface);color:var(--ink);box-shadow:0 14px 40px rgba(48,60,20,.22),0 0 0 1px rgba(48,60,20,.08)}
+.toast .ti{background:var(--volt);color:var(--volt-ink)}
+.toast.err .ti{background:var(--tape);color:var(--tape-ink)}
 </style>
 
 <div class="app" id="app">
@@ -861,7 +878,7 @@ function progress(){
 /* ---------- shell ---------- */
 const TITLES={today:'Сегодня',move:'Движение',chal:'Челленджи',chat:'Общение',more:'Ещё'};
 const SUBT={me:['Мой кабинет',me],nutr:['Питание',nutr],mind:['Mind',mind],progress:['Прогресс',progress],habit:['Привычки',habit]};
-let lastKey='';
+let lastKey='',layerKey='';
 function render(){
   const top=S.stack[S.stack.length-1];let title=TITLES[S.tab],body;
   if(top){if(top.t==='wk'){title='Тренировка';body=detail(top.id)}else if(top.t==='ex'){title='Разбор';body=exDetail(top.id)}else{title=SUBT[top.id][0];body=SUBT[top.id][1]()}}
@@ -870,7 +887,8 @@ function render(){
   const m=$('#main'),sc=m.scrollTop,key=S.tab+'|'+JSON.stringify(S.stack),same=key===lastKey;lastKey=key;
   m.classList.toggle('noanim',same);m.innerHTML=body;if(!same)countUp();if(same||S.keep)m.scrollTop=sc;S.keep=false;
   $('#nav').innerHTML=NAV.map(([k,n,i])=>`<button data-act="go" data-tab="${k}" ${S.tab===k?'aria-current="page"':''}>${ic(i)}${n}</button>`).join('');
-  $('#layer').innerHTML=(S.sos?sosSheet():S.wiz?wizSheet():'');
+  const lk=S.sos?'s'+S.sos:S.wiz?'w':'';$('#layer').innerHTML=(S.sos?sosSheet():S.wiz?wizSheet():'');
+  if(lk&&lk!==layerKey){const sc=document.querySelector('#layer .scrim');if(sc)sc.classList.add('enter')}layerKey=lk;
 }
 function countUp(){const e=document.querySelector('.hnum b');if(!e||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
   const n=+e.dataset.n,t0=performance.now(),D=700;
@@ -895,10 +913,13 @@ function toast(m){
   box.innerHTML=`<div class="toast ${err?'err':''}" role="status"><span class="ti">${ic(err||info?'warn':play?'play':'check')}</span><span>${esc(m)}</span></div>`;
   const t=box.firstChild;void t.offsetWidth;t.classList.add('show');
   clearTimeout(tt);clearTimeout(tt2);
-  tt=setTimeout(()=>{t.classList.remove('show');tt2=setTimeout(()=>{if(box.firstChild===t)box.innerHTML=''},300)},1800)}
+  tt=setTimeout(()=>{t.classList.remove('show');tt2=setTimeout(()=>{if(box.firstChild===t)box.innerHTML=''},320)},2400)}
+function closeLayer(){const sc=document.querySelector('#layer .scrim'),fin=()=>{S.sos=null;S.wiz=false;S.keep=true;render()};
+  if(!sc||sc.classList.contains('leave')||matchMedia('(prefers-reduced-motion:reduce)').matches){fin();return}
+  sc.classList.add('leave');setTimeout(fin,230)}
 
 document.addEventListener('click',e=>{
-  if(e.target.classList&&e.target.classList.contains('scrim')&&(S.sos||S.wiz)){S.sos=null;S.wiz=false;S.keep=true;render();return}
+  if(e.target.classList&&e.target.classList.contains('scrim')&&(S.sos||S.wiz)){closeLayer();return}
   const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,d=b.dataset;
   if(a==='go'){S.tab=d.tab;S.stack=[];S.focus=null;if(d.sub)S.stack.push({t:'sub',id:d.sub})}
   else if(a==='sub')S.stack.push({t:'sub',id:d.id});
@@ -937,7 +958,7 @@ document.addEventListener('click',e=>{
   else if(a==='ask'){const v=$('#qin').value.trim();if(!v){toast('Напишите вопрос');return}S.qa.unshift({q:($('#anon').checked?'Анонимно: ':'')+v,a:''});S.qdraft='';S.anon=false;toast('Вопрос отправлен');return}
   else if(a==='sos'){S.sos='intro';S.okd=false}
   else if(a==='sosgo'){if(!$('#okd').checked){toast('Подтвердите, что прочитали предупреждение');return}S.sos=+d.id}
-  else if(a==='close'){S.sos=null;S.wiz=false}
+  else if(a==='close'){closeLayer();return}
   else if(a==='wizard'){S.wiz=true;wiz={t:null,p:null}}
   else if(a==='w'){wiz[d.k]=d.v}
   else if(a==='wgo'){S.time=wiz.t||'any';S.power=wiz.p||'any';S.cat='all';S.tags=[];S.seg='wk';S.wiz=false;S.tab='move';S.stack=[];S.focus=null}
@@ -949,7 +970,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('click',e=>{const a=e.target.closest('[data-tg]');if(!a)return;
   const w=window.Telegram&&Telegram.WebApp;if(w&&w.openTelegramLink){e.preventDefault();w.openTelegramLink(a.href)}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(S.sos||S.wiz)){S.sos=null;S.wiz=false;S.keep=true;render()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(S.sos||S.wiz)){closeLayer()}});
 document.addEventListener('input',e=>{if(e.target.id==='qin'){S.qdraft=e.target.value;return}
   const mk=e.target.dataset.m;if(mk){S.mform[mk]=e.target.value;return}
   const k=e.target.dataset.d;if(k){S.diary[k]=+e.target.value;$('#v-'+k).textContent=e.target.value;if(S.cmp){S.cmp=false;const p=$('#cmpPanel');if(p)p.remove()}}});
