@@ -545,6 +545,13 @@ main::-webkit-scrollbar{display:none;width:0;height:0}
 .toast .ti{background:var(--volt);color:var(--volt-ink)}
 .toast.err .ti{background:var(--tape);color:var(--tape-ink)}
 textarea{resize:none;min-height:96px;max-height:220px;overflow-y:auto;field-sizing:content;line-height:1.4}
+/* stories text reveal: words rise in one after another, then the lines below */
+@keyframes strise{from{opacity:0;transform:translateY(26px);filter:blur(6px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes stpop{from{opacity:0;transform:scale(.84)}to{opacity:1;transform:none}}
+.st-slide>*{animation-duration:.85s;animation-timing-function:cubic-bezier(.16,1,.3,1)}
+.st-photo{animation-name:stpop;animation-duration:1s}
+.st-h .w{display:inline-block;padding:.16em .06em .14em;margin:-.16em -.06em -.14em;animation:strise .75s cubic-bezier(.16,1,.3,1) both}
+@media (prefers-reduced-motion:reduce){.st-h .w,.st-photo,.st-list li{animation:none!important}}
 </style>
 
 <div class="app" id="app">
@@ -1001,8 +1008,22 @@ function stRender(){
    <button class="st-x" data-st="close" aria-label="Закрыть">${ic('plus')}</button>
    <div class="st-slide ${sl.c}">${sl.body}${last?`<div class="st-cta"><button class="btn" data-st="close">Начать</button></div>`:''}</div>
    <button class="st-prev" data-st="prev" aria-label="Назад"></button><button class="st-next" data-st="next" aria-label="Дальше"></button>`;
-  [...el.querySelectorAll('.st-slide>*')].forEach((n,i)=>n.style.setProperty('--i',i));
+  stReveal(el.querySelector('.st-slide'));
   const b=el.querySelector('.st-bars i.cur b');if(b)b.addEventListener('animationend',()=>stGo(1),{once:true});
+}
+function stReveal(sl){
+  let t=120;
+  [...sl.children].forEach(n=>{
+    if(n.classList.contains('st-bg')||n.classList.contains('st-tint'))return;
+    if(n.tagName==='H2'){
+      let k=0;const frag=document.createDocumentFragment();
+      n.childNodes.forEach(c=>{
+        if(c.nodeType===3){c.textContent.split(/(\s+)/).forEach(w=>{if(!w.trim()){frag.appendChild(document.createTextNode(w));return}
+          const sp=document.createElement('span');sp.className='w';sp.textContent=w;sp.style.animationDelay=(t+k*120)+'ms';k++;frag.appendChild(sp)})}
+        else frag.appendChild(c.cloneNode(true))});
+      n.innerHTML='';n.appendChild(frag);n.style.animation='none';t+=k*120+260;return}
+    if(n.tagName==='UL'){n.style.animationDelay=t+'ms';[...n.children].forEach((li,j)=>{li.style.animation='strise .7s cubic-bezier(.16,1,.3,1) both';li.style.animationDelay=(t+160+j*130)+'ms'});t+=160+n.children.length*130+80;return}
+    n.style.animationDelay=t+'ms';t+=n.classList.contains('st-photo')||n.classList.contains('st-demo')?220:170});
 }
 function stOpen(i=0){si=i;$('#stories').hidden=false;$('#stories').classList.remove('paused');stRender();const e=$('#stories');e.tabIndex=-1;e.focus({preventScroll:true})}
 function stClose(){$('#stories').hidden=true;$('#stories').innerHTML=''}
