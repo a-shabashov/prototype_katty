@@ -544,6 +544,7 @@ main::-webkit-scrollbar{display:none;width:0;height:0}
 .toast{background:var(--surface);color:var(--ink);box-shadow:0 14px 40px rgba(48,60,20,.22),0 0 0 1px rgba(48,60,20,.08)}
 .toast .ti{background:var(--volt);color:var(--volt-ink)}
 .toast.err .ti{background:var(--tape);color:var(--tape-ink)}
+textarea{resize:none;min-height:96px;max-height:220px;overflow-y:auto;field-sizing:content;line-height:1.4}
 </style>
 
 <div class="app" id="app">
@@ -887,6 +888,7 @@ function render(){
   const m=$('#main'),sc=m.scrollTop,key=S.tab+'|'+JSON.stringify(S.stack),same=key===lastKey;lastKey=key;
   m.classList.toggle('noanim',same);m.innerHTML=body;if(!same)countUp();if(same||S.keep)m.scrollTop=sc;S.keep=false;
   $('#nav').innerHTML=NAV.map(([k,n,i])=>`<button data-act="go" data-tab="${k}" ${S.tab===k?'aria-current="page"':''}>${ic(i)}${n}</button>`).join('');
+  const qe=$('#qin');if(qe)autoGrow(qe);
   const lk=S.sos?'s'+S.sos:S.wiz?'w':'';$('#layer').innerHTML=(S.sos?sosSheet():S.wiz?wizSheet():'');
   if(lk&&lk!==layerKey){const sc=document.querySelector('#layer .scrim');if(sc)sc.classList.add('enter')}layerKey=lk;
 }
@@ -914,6 +916,7 @@ function toast(m){
   const t=box.firstChild;void t.offsetWidth;t.classList.add('show');
   clearTimeout(tt);clearTimeout(tt2);
   tt=setTimeout(()=>{t.classList.remove('show');tt2=setTimeout(()=>{if(box.firstChild===t)box.innerHTML=''},320)},2400)}
+function autoGrow(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight+2,220)+'px'}
 function closeLayer(){const sc=document.querySelector('#layer .scrim'),fin=()=>{S.sos=null;S.wiz=false;S.keep=true;render()};
   if(!sc||sc.classList.contains('leave')||matchMedia('(prefers-reduced-motion:reduce)').matches){fin();return}
   sc.classList.add('leave');setTimeout(fin,230)}
@@ -971,7 +974,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('click',e=>{const a=e.target.closest('[data-tg]');if(!a)return;
   const w=window.Telegram&&Telegram.WebApp;if(w&&w.openTelegramLink){e.preventDefault();w.openTelegramLink(a.href)}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(S.sos||S.wiz)){closeLayer()}});
-document.addEventListener('input',e=>{if(e.target.id==='qin'){S.qdraft=e.target.value;return}
+document.addEventListener('input',e=>{if(e.target.id==='qin'){S.qdraft=e.target.value;autoGrow(e.target);return}
   const mk=e.target.dataset.m;if(mk){S.mform[mk]=e.target.value;return}
   const k=e.target.dataset.d;if(k){S.diary[k]=+e.target.value;$('#v-'+k).textContent=e.target.value;if(S.cmp){S.cmp=false;const p=$('#cmpPanel');if(p)p.remove()}}});
 document.addEventListener('change',e=>{if(e.target.id==='okd'){S.okd=e.target.checked;return}if(e.target.id==='anon'){S.anon=e.target.checked;return}
