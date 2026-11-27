@@ -552,6 +552,14 @@ textarea{resize:none;min-height:96px;max-height:220px;overflow-y:auto;field-sizi
 .st-photo{animation-name:stpop;animation-duration:1s}
 .st-h .w{display:inline-block;padding:.16em .06em .14em;margin:-.16em -.06em -.14em;animation:strise .75s cubic-bezier(.16,1,.3,1) both}
 @media (prefers-reduced-motion:reduce){.st-h .w,.st-photo,.st-list li{animation:none!important}}
+.cbar{display:block;height:10px;border-radius:99px;background:rgba(34,44,14,.16);overflow:hidden}
+.cbar i{display:block;height:100%;border-radius:99px;background:var(--volt-ink)}
+.prow{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:600;color:var(--muted)}
+.cprog{display:flex;flex-direction:column;gap:10px;padding:2px 0}
+.cdots{display:flex;justify-content:space-between;align-items:center;gap:2px}
+.cdots u{width:11px;height:11px;border-radius:50%;background:rgba(34,44,14,.18);text-decoration:none;flex:none}
+.cdots u.d{background:var(--volt-ink)}
+.cdots u.t{background:var(--volt-ink);box-shadow:0 0 0 3px rgba(34,44,14,.22)}
 </style>
 
 <div class="app" id="app">
@@ -690,6 +698,7 @@ function wTile(w,i){
    <span class="tmin">${w.min}<small>мин</small></span>
    <span class="tt"><b>${w.t}</b>${bar(w,i)}<span class="meta">${eff(w.lv)}<span>${LV[w.lv-1]}</span></span></span></button>`}
 const R={1:6,2:1,3:4};
+const cprog=(n,cur,cap)=>`<span class="cprog" role="img" aria-label="День ${cur} из ${n}"><span class="cdots">${Array.from({length:n},(_,i)=>`<u class="${i<cur-1?'d':i===cur-1?'t':''}"></u>`).join('')}</span>${cap?`<span class="prow"><span>День ${cur} из ${n}</span><span>Осталось ${plu(n-cur,DAYS)}</span></span>`:''}</span>`;
 function today(){
   const pl=W.find(w=>w.id===R[S.res]),ch=CH[1];
   const tile=(cls,act,ico,t,sub,extra='')=>`<button class="tile ${cls}" data-act="${act}" ${extra}><span class="ico">${ic(ico)}</span><span class="tt"><b>${t}</b><small>${sub}</small></span></button>`;
@@ -704,7 +713,7 @@ function today(){
   ${tile('blush','sos','sosi','Болит спина или шея','SOS, 5–7 минут')}
   ${S.joined.has(ch.id)?`<button class="ccard on tc tile w2" data-act="go" data-tab="chal"><b class="tct">${ch.t}</b>
     <span class="chead"><span class="st on">Челлендж</span><span class="cap">День 9 из ${ch.days}</span></span>
-    <span class="days" style="grid-template-columns:repeat(${ch.days},1fr)" role="img" aria-label="День 9 из ${ch.days}">${Array.from({length:ch.days},(_,i)=>`<u class="${i<8?'d':i===8?'t':''}"></u>`).join('')}</span>
+    ${cprog(ch.days,9)}
     <span class="tcf"><span class="muted sm">Серия: ${plu(4,DAYS)} подряд</span><span class="tcl">Открыть${ic('chev')}</span></span></button>`:`<button class="ccard tc tile w2" data-act="go" data-tab="chal"><b class="tct">${ch.t}</b><span class="chead"><span class="st soon">Челлендж</span></span><span class="tcf"><span class="muted sm">Вы вышли из челленджа. Можно вернуться.</span><span class="tcl">Открыть${ic('chev')}</span></span></button>`}
   ${tile('mist','go','mind','Медитация','5–12 минут','data-tab="more" data-sub="mind"')}
   ${tile('sand','go','cal','Прошёл месяц','Две минуты на дневник','data-tab="more" data-sub="progress"')}
@@ -758,7 +767,7 @@ function chal(){
    <h3>${c.t}</h3>
    <div class="chead"><span class="st ${cls}">${txt}</span><span class="cap">Длится ${plu(c.days,DAYS)}</span></div>
    <p class="sm muted">${c.d}</p>
-   ${on&&c.id===2?`<div class="prog"><div class="days" style="grid-template-columns:repeat(${c.days},1fr)" aria-hidden="true">${Array.from({length:c.days},(_,i)=>`<u class="${i<8?'d':i===8?'t':''}"></u>`).join('')}</div><span class="cap">День 9 из ${c.days}</span></div>`:''}
+   ${on&&c.id===2?`<div class="prog">${cprog(c.days,9,1)}</div>`:''}
    <div class="minis">${c.picks.split(', ').map(p=>`<span>${p}</span>`).join('')}</div>
    ${c.st==='Архив'?'':`<button class="btn ${on?'soft':''}" data-act="join" data-id="${c.id}">${on?'Выйти из челленджа':'Присоединиться'}</button>`}</div>`}).join('')}
 
