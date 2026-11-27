@@ -225,6 +225,18 @@ textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(
 .mfbtn[aria-expanded="true"] .mfch{transform:rotate(90deg)}
 .mfbtn svg{width:20px;height:20px}
 .found{font-size:20px}
+.ccard{background:var(--surface);border-radius:20px;box-shadow:0 0 0 1px var(--line);padding:14px;display:flex;flex-direction:column;gap:10px}
+.ccard.on{box-shadow:0 0 0 2px var(--accent)}
+.ccard h3{font-size:18px;font-weight:800;letter-spacing:-.01em;line-height:1.2;margin-top:-2px}
+.chead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.st{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.st::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--muted);opacity:.6}
+.st.on{color:var(--accent)}.st.on::before{background:var(--accent);opacity:1}
+.st.soon{color:var(--ink)}.st.soon::before{background:var(--sun);opacity:1}
+.prog{display:flex;flex-direction:column;gap:6px}
+.minis{display:flex;flex-wrap:wrap;gap:6px}
+.minis span{font-size:12.5px;font-weight:600;color:var(--muted);background:var(--bg);padding:4px 10px;border-radius:99px}
+.ccard .btn{margin-top:2px}
 </style>
 </head>
 <body>
@@ -323,6 +335,10 @@ const QA=[
 const S={tab:'today',stack:[],cat:'all',time:'any',power:'any',tags:[],seg:'wk',focus:null,mf:false,done:new Set([6]),fav:new Set([1]),joined:new Set([2]),
   diary:{energy:6,sleep:6,back:5,swell:5,mood:7},cmp:false,tseg:'dia',chat:'qa',photos:{a:null,b:null},qa:QA.slice(),sos:null,wiz:false,toast:'',keep:false,okd:false,qdraft:'',anon:false};
 
+/* склонение: plu(21,['день','дня','дней']) -> «21 день». Intl.PluralRules('ru') учитывает 1/21/101, 2-4, 5-20 и дроби */
+const PR=new Intl.PluralRules('ru');
+const plu=(n,[one,few,many])=>{const k=PR.select(n);return n+'\u00a0'+(k==='one'?one:k==='many'?many:few)};
+const DAYS=['день','дня','дней'];
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const eff=n=>`<span class="eff" role="img" aria-label="${LV[n-1]}">${[1,2,3].map(i=>`<u class="${i<=n?'o':''}"></u>`).join('')}</span>`;
@@ -356,7 +372,7 @@ function today(){
    <button class="btn sm" data-act="go" data-tab="more" data-sub="progress">Заполнить</button></div>
   ${S.joined.has(ch.id)?`<div class="group"><div class="head"><h2>${ch.t}</h2></div>
    <div class="group"><div class="days" role="img" aria-label="День 9 из 21">${Array.from({length:21},(_,i)=>`<u class="${i<8?'d':i===8?'t':''}"></u>`).join('')}</div>
-    <p class="sm muted">День 9 из ${ch.days}. Серия: 4 дня подряд.</p></div></div>`:`<button class="li card" data-act="go" data-tab="chal" style="border-radius:20px"><span class="grow"><b>${ch.t}</b><span class="muted sm" style="display:block">Вы вышли из челленджа. Можно вернуться.</span></span>${ic('chev','chev')}</button>`}
+    <p class="sm muted">День 9 из ${ch.days}. Серия: ${plu(4,DAYS)} подряд.</p></div></div>`:`<button class="li card" data-act="go" data-tab="chal" style="border-radius:20px"><span class="grow"><b>${ch.t}</b><span class="muted sm" style="display:block">Вы вышли из челленджа. Можно вернуться.</span></span>${ic('chev','chev')}</button>`}
   <p class="note">Прототип. Все данные примерные.</p>`;
 }
 
@@ -397,16 +413,21 @@ function exDetail(id){const e=EX[id];return `<div class="video">${ic('play')}<sp
  <div class="panel"><h3>Техника</h3>${e.steps.map((s,i)=>`<div style="display:flex;gap:12px;align-items:flex-start"><span class="num">${i+1}</span><span>${s}</span></div>`).join('')}</div>
  <div class="panel" style="background:var(--tape-soft)"><h3 style="color:var(--tape-text)">Типичные ошибки</h3>${e.err.map(s=>`<div style="display:flex;gap:10px">${ic('plus','')}<span>${s}</span></div>`).join('').replace(/<svg class="i "/g,'<svg class="i" style="transform:rotate(45deg);color:var(--tape-text);flex:none"')}</div>`}
 
-function chal(){return `<p class="muted">Тематические подборки из тренировок, которые уже есть в базе.</p>`+CH.map(c=>`
-  <div class="panel"><div class="head"><h3>${c.t}</h3><span class="pill">${S.joined.has(c.id)?'Вы участвуете':c.st}</span></div>
-  <p class="sm muted">${c.d}</p>
-  <div class="days" style="grid-template-columns:repeat(${c.days},1fr)" aria-hidden="true">${Array.from({length:c.days},(_,i)=>`<u class="${S.joined.has(c.id)&&c.id===2&&i<9?'d':''}"></u>`).join('')}</div>
-  <p class="cap">${c.days} дней · ${c.picks}</p>
-  ${c.st==='Архив'?'':`<button class="btn sm ${S.joined.has(c.id)?'soft':''}" data-act="join" data-id="${c.id}" style="align-self:flex-start">${S.joined.has(c.id)?'Выйти из челленджа':'Присоединиться'}</button>`}</div>`).join('')}
+function chal(){
+  const lab={'Скоро':['soon','Скоро старт'],'Архив':['arc','Архив']};
+  return `<p class="muted sm">Тематические подборки из тренировок, которые уже есть в базе.</p>`+CH.map(c=>{
+  const on=S.joined.has(c.id),[cls,txt]=on?['on','Вы участвуете']:(lab[c.st]||['soon',c.st]);
+  return `<div class="ccard ${on?'on':''}">
+   <div class="chead"><span class="st ${cls}">${txt}</span><span class="cap">Длится ${plu(c.days,DAYS)}</span></div>
+   <h3>${c.t}</h3>
+   <p class="sm muted">${c.d}</p>
+   ${on&&c.id===2?`<div class="prog"><div class="days" style="grid-template-columns:repeat(${c.days},1fr)" aria-hidden="true">${Array.from({length:c.days},(_,i)=>`<u class="${i<8?'d':i===8?'t':''}"></u>`).join('')}</div><span class="cap">День 9 из ${c.days}</span></div>`:''}
+   <div class="minis">${c.picks.split(', ').map(p=>`<span>${p}</span>`).join('')}</div>
+   ${c.st==='Архив'?'':`<button class="btn ${on?'soft':''}" data-act="join" data-id="${c.id}">${on?'Выйти из челленджа':'Присоединиться'}</button>`}</div>`}).join('')}
 
 function chat(){
   const seg=`<div class="seg">${[['qa','Вопросы эксперту'],['talk','Обсуждения']].map(([k,n])=>`<button data-act="chatseg" data-k="${k}" aria-pressed="${S.chat===k}">${n}</button>`).join('')}</div>`;
-  if(S.chat==='talk') return seg+`<div class="list">${[['Челлендж «Перед Новым годом»',42,3],['Питание и рецепты',18,0],['Болтушка',120,0]].map(([t,n,b])=>`<button class="li" data-act="toast" data-m="В прототипе чат не открывается"><span class="grow"><b>${t}</b><span class="muted sm" style="display:block">${n} участниц</span></span>${b?`<span class="badge">${b}</span>`:''}</button>`).join('')}</div><p class="note">Формат общения (чат, ветки или лента) уточняется у заказчика.</p>`;
+  if(S.chat==='talk') return seg+`<div class="list">${[['Челлендж «Перед Новым годом»',42,3],['Питание и рецепты',18,0],['Болтушка',120,0]].map(([t,n,b])=>`<button class="li" data-act="toast" data-m="В прототипе чат не открывается"><span class="grow"><b>${t}</b><span class="muted sm" style="display:block">${plu(n,['участница','участницы','участниц'])}</span></span>${b?`<span class="badge">${b}</span>`:''}</button>`).join('')}</div><p class="note">Формат общения (чат, ветки или лента) уточняется у заказчика.</p>`;
   return seg+`<div class="panel"><h3>Задать вопрос</h3><textarea id="qin" rows="3" aria-label="Ваш вопрос" placeholder="Например: можно ли делать планку при диастазе?">${esc(S.qdraft)}</textarea>
    <label class="ck"><input type="checkbox" id="anon" ${S.anon?'checked':''}>Отправить анонимно</label><button class="btn sm" data-act="ask" style="align-self:flex-start">Отправить</button></div>
    <div class="group"><div class="head"><h2>Ответы эксперта</h2><span class="pill">Пример</span></div>${S.qa.map(x=>`<div class="panel"><b>${esc(x.q)}</b>${x.a?`<div class="ans">${esc(x.a)}</div>`:'<span class="sm muted">Ждёт ответа. Сообщим в Telegram, когда эксперт ответит.</span>'}</div>`).join('')}</div>`;
